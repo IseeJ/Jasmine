@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flip Card with Falling Images</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8f4e1;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background-image: url("paper.png");
+        }
+
+        #card {
+            width: 500px;
+            height: 400px;
+            perspective: 1000px;
+            cursor: pointer; 
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 1s;
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+        }
+
+        .card-front img,
+        .card-back img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; 
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+        }
+#falling-images {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: -1;
+}
+
+#falling-images::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://www.transparenttextures.com/patterns/noise.png'); 
+    opacity: 0.2;
+    pointer-events: none;
+    z-index: 1;
+}
+
+#falling-images img {
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+    border: 8px solid white;
+    border-bottom: 20px solid white;
+    filter: sepia(0.3) contrast(1.1) saturate(0.8) brightness(1.05);
+    transition: transform 0.3s ease;
+    border-radius: 4px;
+}
+
+#falling-images img:hover {
+    transform: scale(1.02) rotate(-1deg);
+}
+
+        @keyframes falling {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(calc(100vh + 100px));
+            }
+        }
+
+    </style>
+
+
+</head>
+
+
+<body>
+    <audio id="bg-music" src="bg.mp3" autoplay loop preload="auto"></audio>
+
+
+
+    <div id="card" class="card" onclick="flipCard()">
+
+        <div class="card-inner">
+            <div class="card-front">
+                <img src="1.PNG">
+            </div>
+            <div class="card-back">
+                <img src="2.PNG">
+            </div>
+        </div>
+    </div>
+
+    <div id="falling-images"></div>
+
+    <script>
+        let isFlipped = false; 
+        const flipSound = new Audio('flip.mp3');
+        function flipCard() {
+
+             flipSound.currentTime = 0.1; 
+                flipSound.play().catch(err => {
+            console.warn('Sound autoplay failed:', err);
+    });
+
+            const cardInner = document.querySelector('.card-inner');
+            if (isFlipped) {
+                cardInner.style.transform = 'rotateY(0deg)';
+            } else {
+                cardInner.style.transform = 'rotateY(180deg)';
+                generateFallingImages();
+            }
+            isFlipped = !isFlipped;
+        }
+
+        function generateFallingImages() {
+    const container = document.getElementById("falling-images");
+    const totalImages = 10; 
+    const maxSimultaneous = 3;
+    const imageSize = 110;
+    const gap = 10;
+    const usedPositions = [];
+    let currentIndex = 1;
+
+    function createFallingImage() {
+        if (currentIndex > totalImages) currentIndex = 1; 
+
+        const img = document.createElement("img");
+        img.src = `memory/M${currentIndex}.JPG`;
+        img.style.position = "absolute";
+        img.style.width = `${imageSize}px`;
+        img.style.height = `${imageSize}px`;
+        img.style.opacity = 0.9;
+        img.style.objectFit = "cover";
+        img.style.zIndex = "10";
+        img.classList.add("falling-image");
+
+        let left;
+        let attempts = 0;
+        do {
+            left = Math.floor(Math.random() * (window.innerWidth - imageSize));
+            attempts++;
+        } while (
+            usedPositions.some((pos) => Math.abs(pos - left) < imageSize + gap) &&
+            attempts < 100
+        );
+        usedPositions.push(left);
+        if (usedPositions.length > maxSimultaneous) {
+            usedPositions.shift(); 
+        }
+
+        img.style.left = `${left}px`;
+        img.style.top = `${Math.random() * -200}px`;
+
+        const duration = 5 + Math.random() * 3;
+        const delay = 0;
+
+        img.style.animation = `falling ${duration}s ease-in ${delay}s`;
+
+        container.appendChild(img);
+
+        
+        setTimeout(() => {
+            img.remove(); 
+        }, duration * 1000 + 500); 
+
+        currentIndex++;
+    }
+
+
+    setInterval(() => {
+        createFallingImage();
+    }, 800); 
+}
+
+
+
+window.addEventListener('DOMContentLoaded', () => {
+    const music = document.getElementById('bg-music');
+
+
+    music.volume = 0.5; 
+    music.play().catch(() => {
+        
+        const resumeMusic = () => {
+            music.play();
+            document.removeEventListener('click', resumeMusic);
+        };
+        document.addEventListener('click', resumeMusic);
+    });
+});
+
+    </script>
+</body>
+</html>
+
