@@ -127,6 +127,7 @@
     <script>
         let isFlipped = false; 
         const flipSound = new Audio('flip.mp3');
+        generateFallingImages();
         function flipCard() {
 
              flipSound.currentTime = 0.1; 
@@ -139,7 +140,6 @@
                 cardInner.style.transform = 'rotateY(0deg)';
             } else {
                 cardInner.style.transform = 'rotateY(180deg)';
-                generateFallingImages();
             }
             isFlipped = !isFlipped;
         }
